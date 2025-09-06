@@ -57,7 +57,8 @@ def price_per_token(model_id: str) -> tuple[float, float]:
     elif "ft:gpt-3.5-turbo" in model_id:
         prices = 0.012, 0.016
     else:
-        raise ValueError(f"Invalid model id: {model_id}")
+        prices = 0.012, 0.016
+        #raise ValueError(f"Invalid model id: {model_id}")
 
     return tuple(price / 1000 for price in prices)
 

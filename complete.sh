@@ -2,8 +2,8 @@
 
 # Variables
 experiment_name="debate"
-model_name="gpt-4.1-mini-2025-04-14"
-exp_dir="./exp/gpt4_1_mini_15_q_v2"
+model_name="gpt-5-mini-2025-08-07"
+exp_dir="./exp/gpt5_mini_15_q_baseline"
 
 sandbag=false
 for arg in "$@"; do
@@ -28,11 +28,11 @@ python -m core.debate \
 python -m core.judge \
   exp_dir="$exp_dir" \
   +experiment="$experiment_name" \
-  ++judge.language_model.model="$model_name" \
-  ++judge_name="$model_name"
+  ++judge.language_model.model="gpt-4.1-mini-2025-04-14" \
+  ++judge_name="gpt-4.1-mini-2025-04-14"
 
 # Scoring run
 python -m core.scoring.accuracy \
   exp_dir="$exp_dir" \
   +experiment="$experiment_name" \
-  ++judge_name="$model_name"
+  ++judge_name="gpt-4.1-mini-2025-04-14"

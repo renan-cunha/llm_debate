@@ -1,3 +1,5 @@
-* use gpt4
-* compare results with sandbagging
-* run it again, more data
+* make slides
+* sandbag
+* reproduce debate paper, better models give a better result
+* how to solve the problem?
+* sandbag 
