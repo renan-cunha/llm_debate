@@ -196,7 +196,7 @@ class OpenAIModel(ModelAPIProtocol):
             token_cap *= (
                 10000  # openai does not track token limit so we can increase it
             )
-        request_cap = 40
+        request_cap = 450 # 450
         print(f"setting cap for model {model_id}: {token_cap}, {request_cap}")
         
         token_capacity = Resource(token_cap)

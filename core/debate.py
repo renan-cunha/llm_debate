@@ -6,6 +6,7 @@ from pathlib import Path
 import hydra
 import pandas as pd
 from omegaconf import DictConfig
+from tqdm import tqdm
 
 from core.create_agents import setup_debate
 from core.file_handler import Experiment
@@ -49,7 +50,10 @@ async def run_debates(
 
     sem = asyncio.Semaphore(num_debate_threads)
     tasks = [bounded_run(sem, index, row, swap) for index, row in df.iterrows()]
-    results = await asyncio.gather(*tasks)
+    #results = await asyncio.gather(*tasks)
+    results = []
+    for task in tqdm(asyncio.as_completed(tasks), total=len(tasks)):
+        results.append(await task)
     correct = sum([bool(result["complete"]) for result in results])
     LOGGER.info(f"Processed {len(results)} rows. {correct}  were complete.")
 
