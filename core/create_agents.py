@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from omegaconf import DictConfig
 
@@ -60,8 +60,8 @@ def create_rollout(
     method: Method,
     config: RolloutConfig,
     cache_dir: Path,
-    correct_debater: Optional[DebaterBase],
-    incorrect_debater: Optional[DebaterBase],
+    correct_debaters: List[DebaterBase] | DebaterBase | None,
+    incorrect_debaters: List[DebaterBase] | DebaterBase | None,
     cross_examiner: Optional[JudgeBase],
     correct_judge_BoN: Optional[JudgeBase],
     incorrect_judge_BoN: Optional[JudgeBase],
@@ -73,12 +73,27 @@ def create_rollout(
     rollout_class = ROLLOUT_CLASSES.get(config.rollout_type)
     if not rollout_class:
         raise ValueError(f"Unknown rollout type: {config.rollout_type}")
+
+    if correct_debaters is None:
+        correct_list: List[DebaterBase] = []
+    elif isinstance(correct_debaters, list):
+        correct_list = correct_debaters
+    else:
+        correct_list = [correct_debaters]
+
+    if incorrect_debaters is None:
+        incorrect_list: List[DebaterBase] = []
+    elif isinstance(incorrect_debaters, list):
+        incorrect_list = incorrect_debaters
+    else:
+        incorrect_list = [incorrect_debaters]
+
     return rollout_class(
         method,
         config,
         cache_dir,
-        correct_debater,
-        incorrect_debater,
+        correct_list,
+        incorrect_list,
         cross_examiner,
         correct_judge_BoN,
         incorrect_judge_BoN,
@@ -96,14 +111,26 @@ def setup_debate(
 ) -> RolloutBase:
     assert cfg.rollout.name1 != cfg.rollout.name2
 
+    num_debaters = getattr(cfg, "num_debaters", 2)
+    assert num_debaters % 2 == 0, "num_debaters must be even"
+    num_per_side = num_debaters // 2
+
+    import copy
+
+    correct_configs = [copy.deepcopy(cfg.correct_debater) for _ in range(num_per_side)]
+    incorrect_configs = [
+        copy.deepcopy(cfg.incorrect_debater) for _ in range(num_per_side)
+    ]
+
     if getattr(cfg, "sandbag", False):
         sandbag_path = Path(__file__).resolve().parents[1] / "sandbag_prompt.txt"
         with open(sandbag_path, "r", encoding="utf-8") as f:
             sandbag_text = f.read().strip()
-        sys_prompt = cfg.correct_debater.prompts.messages[0].content
-        cfg.correct_debater.prompts.messages[0].content = (
-            sandbag_text + "\n" + sys_prompt
-        )
+        for i, conf in enumerate(correct_configs):
+            if i == 0:
+                continue
+            sys_prompt = conf.prompts.messages[0].content
+            conf.prompts.messages[0].content = sandbag_text + "\n" + sys_prompt
 
     correct_judge_BoN = (
         create_judge(cfg.method, cfg.correct_preference, cfg.rollout, api_handler)
@@ -137,34 +164,29 @@ def setup_debate(
     )
 
     if cfg.method == "debate" or cfg.method == "baseline":
-        correct_debater = create_debater(
-            cfg.method,
-            cfg.correct_debater,
-            correct=True,
-            api_handler=api_handler,
-        )
-        incorrect_debater = create_debater(
-            cfg.method, cfg.incorrect_debater, correct=False, api_handler=api_handler
-        )
+        correct_debaters = [
+            create_debater(cfg.method, conf, correct=True, api_handler=api_handler)
+            for conf in correct_configs
+        ]
+        incorrect_debaters = [
+            create_debater(cfg.method, conf, correct=False, api_handler=api_handler)
+            for conf in incorrect_configs
+        ]
 
     if cfg.method == "consultancy":
         if cfg.method_type == "correct":
-            correct_debater = create_debater(
-                cfg.method,
-                cfg.correct_debater,
-                correct=True,
-                api_handler=api_handler,
-            )
-            incorrect_debater = None
+            correct_debaters = [
+                create_debater(cfg.method, conf, correct=True, api_handler=api_handler)
+                for conf in correct_configs
+            ]
+            incorrect_debaters = []
 
         elif cfg.method_type == "incorrect":
-            correct_debater = None
-            incorrect_debater = create_debater(
-                cfg.method,
-                cfg.incorrect_debater,
-                correct=False,
-                api_handler=api_handler,
-            )
+            correct_debaters = []
+            incorrect_debaters = [
+                create_debater(cfg.method, conf, correct=False, api_handler=api_handler)
+                for conf in incorrect_configs
+            ]
         else:
             raise ValueError(f"Unknown method type: {cfg.method_type}")
 
@@ -182,8 +204,8 @@ def setup_debate(
         cfg.method,
         cfg.rollout,
         cache_dir,
-        correct_debater,
-        incorrect_debater,
+        correct_debaters,
+        incorrect_debaters,
         cross_examiner,
         correct_judge_BoN,
         incorrect_judge_BoN,
@@ -192,9 +214,9 @@ def setup_debate(
         correct_judge_critique_pm,
         incorrect_judge_critique_pm,
     )
-    if correct_debater:
+    if correct_debaters:
         LOGGER.info(cfg.correct_debater.language_model)
-    if incorrect_debater:
+    if incorrect_debaters:
         LOGGER.info(cfg.incorrect_debater.language_model)
     if cross_examiner:
         LOGGER.info(cfg.cross_examiner.language_model)
