@@ -19,6 +19,7 @@ exp_dir: ???
 method: ??? # debate, consultancy
 method_type: ??? # sim, seq | correct, incorrect
 use_intermediary: ???
+sandbag: false
 
 # Load
 seed: 0
