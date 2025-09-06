@@ -6,9 +6,13 @@ model_name="gpt-5-mini-2025-08-07"
 exp_dir="./exp/gpt5_mini_15_q_baseline"
 
 sandbag=false
+num_debaters=2
+
 for arg in "$@"; do
   if [ "$arg" == "--sandbag" ]; then
     sandbag=true
+  elif [[ "$arg" == --num_debaters=* ]]; then
+    num_debaters="${arg#*=}"
   fi
 done
 
@@ -22,7 +26,8 @@ python -m core.debate \
   ++incorrect_debater.BoN=1 \
   ++max_num_from_same_story=1 \
   ++split=train \
-  sandbag=$sandbag
+  sandbag=$sandbag \
+  num_debaters=$num_debaters
 
 # Judge run
 python -m core.judge \

@@ -20,6 +20,7 @@ method: ??? # debate, consultancy
 method_type: ??? # sim, seq | correct, incorrect
 use_intermediary: ???
 sandbag: false
+num_debaters: 2
 
 # Load
 seed: 0

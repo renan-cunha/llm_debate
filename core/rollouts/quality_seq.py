@@ -18,7 +18,7 @@ class QualitySeqRollout(RolloutBase):
     def __init__(self, *args):
         super().__init__(*args)
         assert (
-            self.correct_debater is not None and self.incorrect_debater is not None
+            self.correct_debaters and self.incorrect_debaters
         ), "Both debaters must be specified"
         assert (
             self.correct_judge_critic is None and self.incorrect_judge_critic is None
@@ -29,13 +29,20 @@ class QualitySeqRollout(RolloutBase):
         transcript: TranscriptConfig,
         current_step: int,
         cache_manager: CacheManager,
+        pair_index: int,
         swap: bool = False,
     ):
         order_name = ["correct", "incorrect"] if not swap else ["incorrect", "correct"]
         order_debater = (
-            [self.correct_debater, self.incorrect_debater]
+            [
+                self.correct_debaters[pair_index],
+                self.incorrect_debaters[pair_index],
+            ]
             if not swap
-            else [self.incorrect_debater, self.correct_debater]
+            else [
+                self.incorrect_debaters[pair_index],
+                self.correct_debaters[pair_index],
+            ]
         )
         order_BoN = (
             [self.correct_judge_BoN, self.incorrect_judge_BoN]
@@ -93,10 +100,10 @@ class QualitySeqRollout(RolloutBase):
             )
         else:
             names["correct"] = (
-                self.config.consultant_name if self.correct_debater else None
+                self.config.consultant_name if self.correct_debaters else None
             )
             names["incorrect"] = (
-                self.config.consultant_name if self.incorrect_debater else None
+                self.config.consultant_name if self.incorrect_debaters else None
             )
             names["cross_examiner"] = (
                 self.config.cross_examiner_name if self.cross_examiner else None
@@ -122,11 +129,15 @@ class QualitySeqRollout(RolloutBase):
             transcript = TranscriptConfig(**json.loads(transcript_cache))
         transcript_string = transcript.json()
 
+        num_pairs = max(len(self.correct_debaters), len(self.incorrect_debaters))
+        total_steps = self.config.num_steps * num_pairs
+
         # Run the debate
-        while current_step < self.config.num_steps:
+        while current_step < total_steps:
             try:
+                pair_idx = current_step % num_pairs
                 transcript = await self.debate_turn(
-                    transcript, current_step, cache_manager, swap
+                    transcript, current_step, cache_manager, pair_idx, swap
                 )
                 current_step += 1
                 transcript_string = transcript.json()
@@ -135,13 +146,16 @@ class QualitySeqRollout(RolloutBase):
                 current_step = -1
                 print(transcript_string)
                 break
-        complete = current_step >= self.config.num_steps
+        complete = current_step >= total_steps
         if complete:
-            debater = (
-                self.correct_debater if self.correct_debater else self.incorrect_debater
+            debaters = (
+                self.correct_debaters
+                if self.correct_debaters
+                else self.incorrect_debaters
             )
             print(f"Completed: {transcript.index}")
-            print(f"Total cost: {debater.api_handler.running_cost:.3f}")
+            total_cost = sum(d.api_handler.running_cost for d in debaters)
+            print(f"Total cost: {total_cost:.3f}")
         return {
             "transcript": transcript_string,
             "complete": complete,

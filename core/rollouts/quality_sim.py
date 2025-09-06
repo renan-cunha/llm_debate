@@ -29,6 +29,7 @@ class QualitySimRollout(RolloutBase):
         transcript: TranscriptConfig,
         current_step: int,
         cache_manager: CacheManager | StubCacheManager,
+        pair_index: int,
         judge_message: Optional[str] = None,
     ):
         new_round = {"type": "sim", "judge": judge_message}
@@ -46,8 +47,8 @@ class QualitySimRollout(RolloutBase):
         transcript.responses.append(Round(**new_responses))
 
         calls = {}
-        if self.correct_debater:
-            calls["correct"] = self.correct_debater.take_turn(
+        if len(self.correct_debaters) > pair_index:
+            calls["correct"] = self.correct_debaters[pair_index].take_turn(
                 transcript,
                 current_step,
                 cache_manager,
@@ -56,8 +57,8 @@ class QualitySimRollout(RolloutBase):
                 self.correct_judge_critique_pm,
             )
 
-        if self.incorrect_debater:
-            calls["incorrect"] = self.incorrect_debater.take_turn(
+        if len(self.incorrect_debaters) > pair_index:
+            calls["incorrect"] = self.incorrect_debaters[pair_index].take_turn(
                 transcript,
                 current_step,
                 cache_manager,
@@ -132,14 +133,18 @@ class QualitySimRollout(RolloutBase):
             transcript = TranscriptConfig(**json.loads(transcript_cache))
         transcript_string = transcript.json()
 
+        num_pairs = max(len(self.correct_debaters), len(self.incorrect_debaters), 1)
+        total_steps = int(self.config.num_steps) * num_pairs
+
         # Run the debate
         duration = 0
-        while current_step < int(self.config.num_steps):
-            if self.correct_debater or self.incorrect_debater or self.cross_examiner:
+        while current_step < total_steps:
+            if self.correct_debaters or self.incorrect_debaters or self.cross_examiner:
                 try:
                     start_time = time.time()
+                    pair_idx = current_step % num_pairs
                     transcript = await self.debate_turn(
-                        transcript, current_step, cache_manager
+                        transcript, current_step, cache_manager, pair_idx
                     )
                     duration = time.time() - start_time
                     LOGGER.info(
@@ -155,17 +160,18 @@ class QualitySimRollout(RolloutBase):
                     break
             else:
                 current_step += 1
-        complete = current_step >= int(self.config.num_steps)
+        complete = current_step >= total_steps
         if complete:
-            if self.correct_debater or self.incorrect_debater:
-                debater = (
-                    self.correct_debater
-                    if self.correct_debater
-                    else self.incorrect_debater
+            if self.correct_debaters or self.incorrect_debaters:
+                debaters = (
+                    self.correct_debaters
+                    if self.correct_debaters
+                    else self.incorrect_debaters
                 )
-                LOGGER.info(f"Total cost: {debater.api_handler.running_cost:.3f}")
+                total_cost = sum(d.api_handler.running_cost for d in debaters)
+                LOGGER.info(f"Total cost: {total_cost:.3f}")
                 # log_model_timings(
-                #     debater.api_handler, save_location="./exp/model_timings.png"
+                #     debaters[0].api_handler, save_location="./exp/model_timings.png"
                 # )
             LOGGER.info(f"Completed: {transcript.index}")
 
