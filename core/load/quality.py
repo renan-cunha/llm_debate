@@ -472,6 +472,7 @@ def filter_questions(
     if avoid_duplicates_for_user_group and minimize_story_duplication:
         shuffled = order_questions_for_humans(questions, previous_human_questions)
 
+    limit = 15
     if limit:
         limit = int(limit)
         if take_from_end:

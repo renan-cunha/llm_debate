@@ -49,8 +49,15 @@ async def run_debates(
             return await rollout.run(index, row, swap=swap)
 
     sem = asyncio.Semaphore(num_debate_threads)
+
+    import random
+    random.seed(42)
+
+    
+    
     tasks = [bounded_run(sem, index, row, swap) for index, row in df.iterrows()]
     #results = await asyncio.gather(*tasks)
+
     results = []
     for task in tqdm(asyncio.as_completed(tasks), total=len(tasks)):
         results.append(await task)
@@ -155,6 +162,7 @@ async def async_main(cfg: DictConfig):
     num_debate_threads = 1
 
     # Run with retry
+    print("running first debate")
     complete = await async_function_with_retry(
         run_debates,
         rollout,
@@ -188,6 +196,8 @@ async def async_main(cfg: DictConfig):
             )
 
         rollout.cache_dir = cache_dir
+        print("running second debate")
+
         complete_swap = await async_function_with_retry(
             run_debates,
             rollout,

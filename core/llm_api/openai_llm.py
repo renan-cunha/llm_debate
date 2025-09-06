@@ -304,7 +304,7 @@ class OpenAIChatModel(OpenAIModel):
     def _assert_valid_id(self, model_id: str):
         if "ft:" in model_id:
             model_id = model_id.split(":")[1]
-        assert model_id in GPT_CHAT_MODELS, f"Invalid model id: {model_id}"
+        #assert model_id in GPT_CHAT_MODELS, f"Invalid model id: {model_id}"
 
     @retry(stop=stop_after_attempt(8), wait=wait_fixed(2))
     async def _get_dummy_response_header(self, model_id: str):

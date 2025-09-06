@@ -151,7 +151,7 @@ class ModelAPI:
                 return self._openai_chat
             elif model_id in ANTHROPIC_MODELS:
                 return self._anthropic_chat
-            raise ValueError(f"Invalid model id: {model_id}")
+            return self._openai_chat
 
         model_classes = [model_id_to_class(model_id) for model_id in model_ids]
         if len(set(str(type(x)) for x in model_classes)) != 1:
