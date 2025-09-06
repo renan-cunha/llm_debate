@@ -96,6 +96,15 @@ def setup_debate(
 ) -> RolloutBase:
     assert cfg.rollout.name1 != cfg.rollout.name2
 
+    if getattr(cfg, "sandbag", False):
+        sandbag_path = Path(__file__).resolve().parents[1] / "sandbag_prompt.txt"
+        with open(sandbag_path, "r", encoding="utf-8") as f:
+            sandbag_text = f.read().strip()
+        sys_prompt = cfg.correct_debater.prompts.messages[0].content
+        cfg.correct_debater.prompts.messages[0].content = (
+            sandbag_text + "\n" + sys_prompt
+        )
+
     correct_judge_BoN = (
         create_judge(cfg.method, cfg.correct_preference, cfg.rollout, api_handler)
         if cfg.correct_debater.BoN > 1

@@ -5,6 +5,13 @@ experiment_name="debate"
 model_name="gpt-4.1-mini-2025-04-14"
 exp_dir="./exp/gpt4_1_mini_15_q_v2"
 
+sandbag=false
+for arg in "$@"; do
+  if [ "$arg" == "--sandbag" ]; then
+    sandbag=true
+  fi
+done
+
 # Debate run
 python -m core.debate \
   exp_dir="$exp_dir" \
@@ -14,7 +21,8 @@ python -m core.debate \
   ++correct_debater.BoN=1 \
   ++incorrect_debater.BoN=1 \
   ++max_num_from_same_story=1 \
-  ++split=train
+  ++split=train \
+  sandbag=$sandbag
 
 # Judge run
 python -m core.judge \
