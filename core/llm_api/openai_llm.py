@@ -44,7 +44,7 @@ def price_per_token(model_id: str) -> tuple[float, float]:
         prices = 0.03, 0.06
     elif model_id.startswith("gpt-4-32k"):
         prices = 0.06, 0.12
-    elif model_id.startswith("gpt-3.5-turbo-16k"):
+    elif model_id.startswith("gpt-5-nano-2025-08-07"):
         prices = 0.003, 0.004
     elif model_id.startswith("gpt-3.5-turbo"):
         prices = 0.0015, 0.002
@@ -196,8 +196,9 @@ class OpenAIModel(ModelAPIProtocol):
             token_cap *= (
                 10000  # openai does not track token limit so we can increase it
             )
-
+        request_cap = 40
         print(f"setting cap for model {model_id}: {token_cap}, {request_cap}")
+        
         token_capacity = Resource(token_cap)
         request_capacity = Resource(request_cap)
         token_capacity.consume(min(token_cap, tokens_consumed))
@@ -283,6 +284,7 @@ _GPT_4_MODELS = [
     "gpt-4-32k-0314",
     "gpt-4-32k-0613",
     "gpt-4-1106-preview",
+    "gpt-5-nano-2025-08-07"
 ]
 _GPT_TURBO_MODELS = [
     "gpt-3.5-turbo",
@@ -290,6 +292,7 @@ _GPT_TURBO_MODELS = [
     "gpt-3.5-turbo-16k",
     "gpt-3.5-turbo-16k-0613",
     "gpt-3.5-turbo-1106",
+    "gpt-5-nano-2025-08-07"
 ]
 GPT_CHAT_MODELS = set(_GPT_4_MODELS + _GPT_TURBO_MODELS)
 
@@ -309,13 +312,15 @@ class OpenAIChatModel(OpenAIModel):
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {openai.api_key}",
-            "OpenAI-Organization": self.organization,
+            #"OpenAI-Organization": self.organization,
         }
+        print(model_id)
         data = {
             "model": model_id,
             "messages": [{"role": "user", "content": "Say 1"}],
         }
         response = requests.post(url, headers=headers, json=data)
+        print(response.content)
         if "x-ratelimit-limit-tokens" not in response.headers:
             raise RuntimeError("Failed to get dummy response header")
         return response.headers
@@ -361,11 +366,21 @@ class OpenAIChatModel(OpenAIModel):
             params["logprobs"] = True
 
         api_start = time.time()
-        api_response: OpenAICompletion = await openai.ChatCompletion.acreate(messages=prompt, model=model_id, organization=self.organization, **params)  # type: ignore
+        params.pop("max_tokens", None)
+        params.pop("temperature", None)
+        params.pop("l", None)
+        print(params)
+        import sys
+        #sys.exit()
+        api_response: OpenAICompletion = await openai.ChatCompletion.acreate(messages=prompt, model=model_id, **params)  # type: ignore
         api_duration = time.time() - api_start
         duration = time.time() - start_time
         context_token_cost, completion_token_cost = price_per_token(model_id)
         context_cost = api_response.usage.prompt_tokens * context_token_cost
+        
+        print(type(api_response.choices[0]))
+        import sys
+        
         return [
             LLMResponse(
                 model_id=model_id,
@@ -375,9 +390,7 @@ class OpenAIChatModel(OpenAIModel):
                 duration=duration,
                 cost=context_cost
                 + count_tokens(choice.message.content) * completion_token_cost,
-                logprobs=self.convert_top_logprobs(choice.logprobs)
-                if choice.logprobs is not None
-                else None,
+                logprobs=None
             )
             for choice in api_response.choices
         ]

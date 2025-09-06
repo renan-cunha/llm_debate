@@ -15,7 +15,7 @@ Preferred communication style: Simple, everyday language.
 - **Modular agent system** with separate debater and judge classes that can be configured for different LLM models
 - **Asynchronous processing** using Python's asyncio for handling concurrent debate sessions and API calls
 
-## Frontend Architecture  
+## Frontend Architecture
 - **React with TypeScript** for the web interface
 - **Tailwind CSS** for styling and responsive design
 - **Vite** as the build tool and development server
@@ -24,7 +24,7 @@ Preferred communication style: Simple, everyday language.
 
 ## LLM Integration
 - **Multi-provider support** for OpenAI (GPT models) and Anthropic (Claude models) APIs
-- **Rate limiting and retry logic** to handle API constraints gracefully  
+- **Rate limiting and retry logic** to handle API constraints gracefully
 - **Configurable model parameters** (temperature, max tokens, etc.) via YAML configuration files
 - **Token counting and cost tracking** for budget management
 - **Preference model integration** for ranking multiple candidate responses (Best-of-N sampling)
@@ -65,7 +65,7 @@ Preferred communication style: Simple, everyday language.
 - **Datasets library** for accessing the QuALITY dataset
 - **TikToken** for accurate token counting across different models
 
-## Web Framework & Utilities  
+## Web Framework & Utilities
 - **FastAPI** as the web framework with automatic API documentation
 - **Uvicorn** as the ASGI server for running the FastAPI application
 - **Pydantic** for data validation and serialization (v1.x for compatibility)

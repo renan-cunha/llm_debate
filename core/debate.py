@@ -148,6 +148,7 @@ async def async_main(cfg: DictConfig):
     )
 
     LOGGER.info(f"Running debates with {num_debate_threads} threads")
+    num_debate_threads = 1
 
     # Run with retry
     complete = await async_function_with_retry(
