@@ -2,11 +2,13 @@
 
 # Variables
 experiment_name="debate"
-model_name="gpt-5-mini-2025-08-07"
-exp_dir="./exp/gpt5_mini_15_q_baseline"
+model_name="gpt-4.1-mini-2025-04-14"
+exp_dir="./exp/gpt4_1_mini_4debaters_sandbag_v5"
 
-sandbag=false
-num_debaters=2
+# gpt-5-mini-2025-08-07
+
+sandbag=true
+num_debaters=4
 
 for arg in "$@"; do
   if [ "$arg" == "--sandbag" ]; then

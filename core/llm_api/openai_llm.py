@@ -361,7 +361,8 @@ class OpenAIChatModel(OpenAIModel):
         self, prompt: OAIChatPrompt, model_id, start_time, **params
     ) -> list[LLMResponse]:
         LOGGER.debug(f"Making {model_id} call with {self.organization}")
-
+        if "only answer questions correctly exactly 33" in prompt:
+            print("SANDBAGGED")
         if "logprobs" in params:
             params["top_logprobs"] = params["logprobs"]
             params["logprobs"] = True
@@ -370,7 +371,6 @@ class OpenAIChatModel(OpenAIModel):
         params.pop("max_tokens", None)
         params.pop("temperature", None)
         params.pop("l", None)
-        print(params)
         import sys
         #sys.exit()
         api_response: OpenAICompletion = await openai.ChatCompletion.acreate(messages=prompt, model=model_id, **params)  # type: ignore
@@ -465,6 +465,8 @@ class OpenAIBaseModel(OpenAIModel):
     ) -> list[LLMResponse]:
         LOGGER.debug(f"Making {model_id} call with {self.organization}")
         api_start = time.time()
+        if "only answer questions correctly exactly 33" in prompt:
+            print("SANDBAGGED")
         api_response: OpenAICompletion = await openai.Completion.acreate(prompt=prompt, model=model_id, organization=self.organization, **params)  # type: ignore
         api_duration = time.time() - api_start
         duration = time.time() - start_time
