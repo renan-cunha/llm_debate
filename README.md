@@ -55,7 +55,7 @@ Sandbagging decreases judge accuracy. Even when there is still one legitimate de
 # create virtual env
 pip install -r requirements.txt
 export API_KEY=...   # set openai key
-bash run_debate.sh \
+bash complete.sh \
   --model_name=gpt-5-mini-2025-08-07 \
   --exp_dir=./exp/gpt5_run \
   --sandbag \
