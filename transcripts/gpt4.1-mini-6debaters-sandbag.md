@@ -154,7 +154,7 @@ By MANLY BANISTER
 
  the U.S. copyright on this publication was renewed.]
 Except for transportation, it was absolutely
- 
+
 free ... but how much would the freight cost?
 "It is an outrage," said Koltan of the House of Masur, "that the
  Earthmen land among the Thorabians!"

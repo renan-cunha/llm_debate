@@ -2,15 +2,15 @@
 
 **One-line**: Replicated the debate-improves-truth result; extended to N > 2 debaters with sandbagging roles. Judge accuracy improves with more debaters, but decreases when N − 1 debaters on the correct-answer team are sandbagging.
 
-**Why this matters**  
+**Why this matters**
 Tests whether debate-style oversight can be subverted by strategic underperformance (sandbagging). Directly relevant to oversight-subversion benchmarks and collusion-style risks in automated regimes.
 
 ## TL;DR
-- **Replication**: [Debating with More Persuasive LLMs Leads to More Truthful Answers](https://arxiv.org/pdf/2402.06782).  
+- **Replication**: [Debating with More Persuasive LLMs Leads to More Truthful Answers](https://arxiv.org/pdf/2402.06782).
 - **Extension**: N-debaters + assigned sandbagger(s); measured effects on judge truth rate.
 - **Findings**:
   - Replication: More Persuasive LLM Debaters → More Truthful Answers
-  - Judge Accuracy Improves With More Debaters 
+  - Judge Accuracy Improves With More Debaters
   - Sandbagging Hurts The Debate
 - **Limitation**: Small scale (15 QuALITY questions, single run).
 

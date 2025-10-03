@@ -12,10 +12,9 @@ def main(csv_path):
 
     output_path = csv_path.with_suffix(".md")
 
-    with open(csv_path, newline="",
-              encoding="utf-8") as csvfile, open(output_path,
-                                                 "w",
-                                                 encoding="utf-8") as mdfile:
+    with open(csv_path, newline="", encoding="utf-8") as csvfile, open(
+        output_path, "w", encoding="utf-8"
+    ) as mdfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             story_title = row.get("story_title", "").strip()
