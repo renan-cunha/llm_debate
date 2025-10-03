@@ -130,10 +130,12 @@ def setup_debate(
             if i == 0:
                 continue
             sys_prompt = conf.prompts.messages[0].content
-            correct_configs[i].prompts.messages[0].content = sandbag_text + "\n" + sys_prompt
+            correct_configs[i].prompts.messages[0].content = (
+                sandbag_text + "\n" + sys_prompt
+            )
     for i, conf in enumerate(correct_configs):
         print(correct_configs[i].prompts.messages[0].content[:500])
-        print("="*80)
+        print("=" * 80)
     import sys
 
     correct_judge_BoN = (

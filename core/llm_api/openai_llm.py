@@ -58,7 +58,7 @@ def price_per_token(model_id: str) -> tuple[float, float]:
         prices = 0.012, 0.016
     else:
         prices = 0.012, 0.016
-        #raise ValueError(f"Invalid model id: {model_id}")
+        # raise ValueError(f"Invalid model id: {model_id}")
 
     return tuple(price / 1000 for price in prices)
 
@@ -197,9 +197,10 @@ class OpenAIModel(ModelAPIProtocol):
             token_cap *= (
                 10000  # openai does not track token limit so we can increase it
             )
-        request_cap = 450 # 450
+        request_cap = 4500  # 450
+        token_cap = 1_800_000
         print(f"setting cap for model {model_id}: {token_cap}, {request_cap}")
-        
+
         token_capacity = Resource(token_cap)
         request_capacity = Resource(request_cap)
         token_capacity.consume(min(token_cap, tokens_consumed))
@@ -285,7 +286,7 @@ _GPT_4_MODELS = [
     "gpt-4-32k-0314",
     "gpt-4-32k-0613",
     "gpt-4-1106-preview",
-    "gpt-5-nano-2025-08-07"
+    "gpt-5-nano-2025-08-07",
 ]
 _GPT_TURBO_MODELS = [
     "gpt-3.5-turbo",
@@ -293,7 +294,7 @@ _GPT_TURBO_MODELS = [
     "gpt-3.5-turbo-16k",
     "gpt-3.5-turbo-16k-0613",
     "gpt-3.5-turbo-1106",
-    "gpt-5-nano-2025-08-07"
+    "gpt-5-nano-2025-08-07",
 ]
 GPT_CHAT_MODELS = set(_GPT_4_MODELS + _GPT_TURBO_MODELS)
 
@@ -305,7 +306,7 @@ class OpenAIChatModel(OpenAIModel):
     def _assert_valid_id(self, model_id: str):
         if "ft:" in model_id:
             model_id = model_id.split(":")[1]
-        #assert model_id in GPT_CHAT_MODELS, f"Invalid model id: {model_id}"
+        # assert model_id in GPT_CHAT_MODELS, f"Invalid model id: {model_id}"
 
     @retry(stop=stop_after_attempt(8), wait=wait_fixed(2))
     async def _get_dummy_response_header(self, model_id: str):
@@ -313,7 +314,7 @@ class OpenAIChatModel(OpenAIModel):
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {openai.api_key}",
-            #"OpenAI-Organization": self.organization,
+            # "OpenAI-Organization": self.organization,
         }
         print(model_id)
         data = {
@@ -372,16 +373,17 @@ class OpenAIChatModel(OpenAIModel):
         params.pop("temperature", None)
         params.pop("l", None)
         import sys
-        #sys.exit()
+
+        # sys.exit()
         api_response: OpenAICompletion = await openai.ChatCompletion.acreate(messages=prompt, model=model_id, **params)  # type: ignore
         api_duration = time.time() - api_start
         duration = time.time() - start_time
         context_token_cost, completion_token_cost = price_per_token(model_id)
         context_cost = api_response.usage.prompt_tokens * context_token_cost
-        
+
         print(type(api_response.choices[0]))
         import sys
-        
+
         return [
             LLMResponse(
                 model_id=model_id,
@@ -391,7 +393,7 @@ class OpenAIChatModel(OpenAIModel):
                 duration=duration,
                 cost=context_cost
                 + count_tokens(choice.message.content) * completion_token_cost,
-                logprobs=None
+                logprobs=None,
             )
             for choice in api_response.choices
         ]

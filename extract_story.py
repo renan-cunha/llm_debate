@@ -4,7 +4,7 @@ import csv
 import json
 import re
 from pathlib import Path
-from typing import Dict, Any, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 
 def parse_args():
@@ -13,21 +13,21 @@ def parse_args():
     )
     p.add_argument(
         "csv_path",
-        help="Path to the CSV file containing 'transcript' and 'answer_judge'")
-    p.add_argument("row",
-                   type=int,
-                   help="Row index (0-based) to read from the CSV")
+        help="Path to the CSV file containing 'transcript' and 'answer_judge'",
+    )
+    p.add_argument("row", type=int, help="Row index (0-based) to read from the CSV")
     p.add_argument(
         "--out",
         type=Path,
         default=None,
-        help="Optional output .md path (default: <csvstem>_row<row>.md)")
+        help="Optional output .md path (default: <csvstem>_row<row>.md)",
+    )
     return p.parse_args()
 
 
 def get_row_values(
-    csv_path: str, row_idx: int,
-    cols=("transcript", "answer_judge")) -> Dict[str, str]:
+    csv_path: str, row_idx: int, cols=("transcript", "answer_judge")
+) -> Dict[str, str]:
     with open(csv_path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         missing = [c for c in cols if c not in reader.fieldnames]
@@ -79,8 +79,7 @@ def normalize_text_cell(s: str) -> str:
     return s
 
 
-ARGUMENT_RE = re.compile(r"<argument>(.*?)</argument>",
-                         flags=re.DOTALL | re.IGNORECASE)
+ARGUMENT_RE = re.compile(r"<argument>(.*?)</argument>", flags=re.DOTALL | re.IGNORECASE)
 THINKING_RE = re.compile(r"</?thinking>", flags=re.IGNORECASE)
 
 
@@ -131,18 +130,25 @@ def determine_correct_is_A(obj: Dict[str, Any]) -> bool:
         inc = names.get("incorrect")
 
         def to_side(s: Any):
-            if not isinstance(s, str): return None
+            if not isinstance(s, str):
+                return None
             t = s.strip().lower()
-            if t in ("debater a", "a", "debater_a"): return "A"
-            if t in ("debater b", "b", "debater_b"): return "B"
+            if t in ("debater a", "a", "debater_a"):
+                return "A"
+            if t in ("debater b", "b", "debater_b"):
+                return "B"
             return None
 
         side_corr = to_side(corr)
         side_inc = to_side(inc)
-        if side_corr == "A": return True
-        if side_corr == "B": return False
-        if side_inc == "A": return False
-        if side_inc == "B": return True
+        if side_corr == "A":
+            return True
+        if side_corr == "B":
+            return False
+        if side_inc == "A":
+            return False
+        if side_inc == "B":
+            return True
     return True  # default
 
 
@@ -188,9 +194,7 @@ def build_markdown(obj: Dict[str, Any], judge_blob: str) -> str:
 
 def main():
     args = parse_args()
-    cells = get_row_values(args.csv_path,
-                           args.row,
-                           cols=("transcript", "answer_judge"))
+    cells = get_row_values(args.csv_path, args.row, cols=("transcript", "answer_judge"))
     transcript_raw = cells["transcript"]
     judge_raw = cells.get("answer_judge", "")
 
